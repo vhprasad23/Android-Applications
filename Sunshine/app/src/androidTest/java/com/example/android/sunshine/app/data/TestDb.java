@@ -15,6 +15,7 @@
  */
 package com.example.android.sunshine.app.data;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.test.AndroidTestCase;
@@ -127,6 +128,37 @@ public class TestDb extends AndroidTestCase {
         // query if you like)
 
         // Finally, close the cursor and database
+        SQLiteDatabase db = new WeatherDbHelper(
+                this.mContext).getWritableDatabase();
+        ContentValues contVals = new ContentValues();
+
+        String testLocationSetting = "99705";
+        String testCityName = "North Pole";
+        double testLatitude = 64.7488;
+        double testLongitude = -147.353;
+
+        contVals.put(WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING,testLocationSetting);
+        contVals.put(WeatherContract.LocationEntry.COLUMN_CITY_NAME,testCityName);
+        contVals.put(WeatherContract.LocationEntry.COLUMN_COORD_LAT, testLatitude);
+        contVals.put(WeatherContract.LocationEntry.COLUMN_COORD_LONG, testLongitude);
+
+        long locationRowId;
+        locationRowId = db.insert(WeatherContract.LocationEntry.TABLE_NAME, null, contVals);
+        assertTrue(locationRowId != -1);
+        Cursor locTableCursor;
+        String whereClause = WeatherContract.LocationEntry.COLUMN_COORD_LAT + "=? AND " + WeatherContract.LocationEntry.COLUMN_COORD_LONG + "=?";
+        String[] whereArgs = new String[]{
+                String.valueOf(testLatitude),
+                String.valueOf(testLongitude)
+        };
+        locTableCursor = db.query(WeatherContract.LocationEntry.TABLE_NAME,null,whereClause,whereArgs,null,null,null,null);
+        assertTrue(locTableCursor.moveToFirst());
+        TestUtilities.validateCurrentRecord("Error: Location Query Validation Failed",
+                locTableCursor, contVals);
+
+        locTableCursor.close();
+        db.close();
+
 
     }
 
