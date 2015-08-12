@@ -128,36 +128,8 @@ public class TestDb extends AndroidTestCase {
         // query if you like)
 
         // Finally, close the cursor and database
-        SQLiteDatabase db = new WeatherDbHelper(
-                this.mContext).getWritableDatabase();
-        ContentValues contVals = new ContentValues();
+        insertLocation();
 
-        String testLocationSetting = "99705";
-        String testCityName = "North Pole";
-        double testLatitude = 64.7488;
-        double testLongitude = -147.353;
-
-        contVals.put(WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING,testLocationSetting);
-        contVals.put(WeatherContract.LocationEntry.COLUMN_CITY_NAME,testCityName);
-        contVals.put(WeatherContract.LocationEntry.COLUMN_COORD_LAT, testLatitude);
-        contVals.put(WeatherContract.LocationEntry.COLUMN_COORD_LONG, testLongitude);
-
-        long locationRowId;
-        locationRowId = db.insert(WeatherContract.LocationEntry.TABLE_NAME, null, contVals);
-        assertTrue(locationRowId != -1);
-        Cursor locTableCursor;
-        String whereClause = WeatherContract.LocationEntry.COLUMN_COORD_LAT + "=? AND " + WeatherContract.LocationEntry.COLUMN_COORD_LONG + "=?";
-        String[] whereArgs = new String[]{
-                String.valueOf(testLatitude),
-                String.valueOf(testLongitude)
-        };
-        locTableCursor = db.query(WeatherContract.LocationEntry.TABLE_NAME,null,whereClause,whereArgs,null,null,null,null);
-        assertTrue(locTableCursor.moveToFirst());
-        TestUtilities.validateCurrentRecord("Error: Location Query Validation Failed",
-                locTableCursor, contVals);
-
-        locTableCursor.close();
-        db.close();
 
 
     }
@@ -193,6 +165,21 @@ public class TestDb extends AndroidTestCase {
         // query if you like)
 
         // Finally, close the cursor and database
+        long locationRowID;
+        locationRowID = insertLocation();
+        ContentValues contentValues = new ContentValues();
+        contentValues = TestUtilities.createWeatherValues(locationRowID);
+        SQLiteDatabase db = new WeatherDbHelper(
+                this.mContext).getWritableDatabase();
+        db.insert(WeatherContract.WeatherEntry.TABLE_NAME,null,contentValues);
+        Cursor weatherTableCursor;
+        weatherTableCursor = db.query(WeatherContract.WeatherEntry.TABLE_NAME,null,null,null,null,null,null,null);
+        TestUtilities.validateCursor("Error reading from Weather database",weatherTableCursor,contentValues);
+        weatherTableCursor.close();
+        db.close();
+
+
+
     }
 
 
@@ -202,6 +189,36 @@ public class TestDb extends AndroidTestCase {
         testWeatherTable and testLocationTable.
      */
     public long insertLocation() {
-        return -1L;
+        SQLiteDatabase db = new WeatherDbHelper(
+                this.mContext).getWritableDatabase();
+        ContentValues contVals = new ContentValues();
+
+        String testLocationSetting = "99705";
+        String testCityName = "North Pole";
+        double testLatitude = 64.7488;
+        double testLongitude = -147.353;
+
+        contVals.put(WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING,testLocationSetting);
+        contVals.put(WeatherContract.LocationEntry.COLUMN_CITY_NAME,testCityName);
+        contVals.put(WeatherContract.LocationEntry.COLUMN_COORD_LAT, testLatitude);
+        contVals.put(WeatherContract.LocationEntry.COLUMN_COORD_LONG, testLongitude);
+
+        long locationRowId;
+        locationRowId = db.insert(WeatherContract.LocationEntry.TABLE_NAME, null, contVals);
+        assertTrue(locationRowId != -1);
+        Cursor locTableCursor;
+        String whereClause = WeatherContract.LocationEntry.COLUMN_COORD_LAT + "=? AND " + WeatherContract.LocationEntry.COLUMN_COORD_LONG + "=?";
+        String[] whereArgs = new String[]{
+                String.valueOf(testLatitude),
+                String.valueOf(testLongitude)
+        };
+        locTableCursor = db.query(WeatherContract.LocationEntry.TABLE_NAME,null,whereClause,whereArgs,null,null,null,null);
+        assertTrue(locTableCursor.moveToFirst());
+        TestUtilities.validateCurrentRecord("Error: Location Query Validation Failed",
+                locTableCursor, contVals);
+
+        locTableCursor.close();
+        db.close();
+        return locationRowId;
     }
 }
